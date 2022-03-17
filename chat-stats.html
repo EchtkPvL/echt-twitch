@@ -125,7 +125,11 @@
         // Parse channel parameter
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
-        if (urlParams.has('channel')) channel = urlParams.get('channel');
+        if (urlParams.has('channel')) {
+            channel = urlParams.get('channel');
+        } else {
+            window.location.href = "?channel=echtkpvl";
+        }
         document.title = channel + ' Stats';
 
         const client = new tmi.Client({
