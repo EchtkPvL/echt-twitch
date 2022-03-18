@@ -68,6 +68,64 @@
         }
     </style>
     <style>
+        /* https://www.w3schools.com/howto/howto_css_switch.asp */
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+    </style>
+    <style>
         li { list-style-type: none; }
 
         ul { padding-inline-start: 0px; }
@@ -79,6 +137,10 @@
         li.banned { background: #ff0000; color: #000; }
         li.timeout { background: #ffa500; color: #000; }
     </style>
+    <style id="style-first"></style>
+    <style id="style-deleted"></style>
+    <style id="style-banned"></style>
+    <style id="style-timeout"></style>
 
     <script src="//code.jquery.com/jquery-3.5.0.min.js"></script>
     <script src="//github.com/tmijs/tmi.js/releases/download/v1.8.5/tmi.min.js"></script>
@@ -99,7 +161,41 @@
                 <ul id="chat"></ul>
             </div>
             <div class="col-4 stats">
-                <div id="stats"></div>
+                <div id="stats">
+                    <ul id="stats1"></ul>
+                    <ul id="stats2"></ul>
+                    <ul id="stats3">
+                        <li class="first">
+                            <label class="switch">
+                                <input type="checkbox" id="stats3-first-cb" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <b>First-Time Chatter</b>: <span id="stats3-first"></span>
+                        </li>
+                        <li class="deleted">
+                            <label class="switch">
+                                <input type="checkbox" id="stats3-deleted-cb" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <b>Deleted</b>: <span id="stats3-deleted"></span>
+                        </li>
+                        <li class="timeout">
+                            <label class="switch">
+                                <input type="checkbox" id="stats3-timeout-cb" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <b>Timeout</b>: <span id="stats3-timeout"></span>
+                        </li>
+                        <li class="banned">
+                            <label class="switch">
+                                <input type="checkbox" id="stats3-banned-cb" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <b>Banned</b>: <span id="stats3-banned"></span>
+                        </li>
+                    </ul>
+                    <ul id="stats4"></ul>
+                </div>
             </div>
         </div>
     </div>
@@ -199,6 +295,26 @@
             window.setTimeout(genStats, 250);
         });
 
+        $('#stats3-first-cb').change(function() {
+            if(!this.checked) $('#style-first').html('#chat > li.first { display: none; }');
+            if(this.checked) $('#style-first').html('#chat > li.first { display: inherit; }');
+        });
+
+        $('#stats3-deleted-cb').change(function() {
+            if(!this.checked) $('#style-deleted').html('#chat > li.deleted { display: none; }');
+            if(this.checked) $('#style-deleted').html('#chat > li.deleted { display: inherit; }');  
+        });
+
+        $('#stats3-banned-cb').change(function() {
+            if(!this.checked) $('#style-banned').html('#chat > li.banned { display: none; }');
+            if(this.checked) $('#style-banned').html('#chat > li.banned { display: inherit; }');  
+        });
+
+        $('#stats3-timeout-cb').change(function() {
+            if(!this.checked) $('#style-timeout').html('#chat > li.timeout { display: none; }');
+            if(this.checked) $('#style-timeout').html('#chat > li.timeout { display: inherit; }');  
+        });
+
         function ping() {
             client.ping()
             .then((data) => {
@@ -217,24 +333,27 @@
         }
 
         function genStats() {
-            $("#stats").html(
-                '<ul>'
-                + '<li><b>Total-MSG</b>: ' + msg_total + '</li>'
+            $("#stats1").html(
+                '<li><b>Total-MSG</b>: ' + msg_total + '</li>'
                 + '<li><b>Unique-Users</b>: ' + unique_users.length + '</li>'
                 + '<li><b>MSG per User</b>: ' + (msg_total / unique_users.length).toFixed(2) + '</li>'
                 + '<li><b>MSG per Minute</b>: ' + msgPerMinute(msg_total) + '</li>'
                 + '<li><b>Seconds per MSG</b>: ' + secondPerMsg(msg_total) + '</li>'
-                + '<li><br></li>'
-                + '<li><b>User MSGs</b>: ' + (msg_total - msg_mod - msg_sub - msg_vip) + ' (' + genPerc((msg_total - msg_mod - msg_sub - msg_vip), msg_total) + '%)</li>'
+            );
+
+            $("#stats2").html(
+                '<li><b>User MSGs</b>: ' + (msg_total - msg_mod - msg_sub - msg_vip) + ' (' + genPerc((msg_total - msg_mod - msg_sub - msg_vip), msg_total) + '%)</li>'
                 + '<li><b>Mod MSGs</b>: ' + msg_mod + ' (' + genPerc(msg_mod, msg_total) + '%)</li>'
                 + '<li><b>VIP MSGs</b>: ' + msg_vip + ' (' + genPerc(msg_vip, msg_total) + '%)</li>'
                 + '<li><b>Sub MSGs</b>: ' + msg_sub + ' (' + genPerc(msg_sub, msg_total) + '%)</li>'
-                + '<li><br></li>'
-                + genLi('first', '<b>First-Time Chatter</b>: ' + msg_first + ' (' + genPerc(msg_first, unique_users.length) + '%)', false)
-                + genLi('deleted', '<b>Deleted</b>: ' + msg_deleted + ' (' + genPerc(msg_deleted, msg_total) + '%)', false)
-                + genLi('timeout', '<b>Timeout</b>: ' + timeout + ' (' + genPerc(timeout, unique_users.length) + '%)', false)
-                + genLi('banned', '<b>Banned</b>: ' + banned + ' (' + genPerc(banned, unique_users.length) + '%)', false)
-                + '<li><br></li>'
+            );
+
+            $("#stats3-first").text(msg_first + ' (' + genPerc(msg_first, unique_users.length) + '%)');
+            $("#stats3-deleted").text(msg_deleted + ' (' + genPerc(msg_deleted, msg_total) + '%)');
+            $("#stats3-timeout").text(timeout + ' (' + genPerc(timeout, unique_users.length) + '%)');
+            $("#stats3-banned").text(banned + ' (' + genPerc(banned, unique_users.length) + '%)');
+
+            $("#stats4").html(
                 + '<li><b>Pings</b>: ' + pings + '</li>'
                 + '<li><b>Join MSG</b>: ' + irc_join + '</li>'
                 + '<li><b>Part MSG</b>: ' + irc_part + '</li>'
@@ -244,7 +363,6 @@
                 + '<li><b>Last IRC MSG</b>: ' + timestamp() + '</li>'
                 + '<li><b>Runtime</b>: ' + timeDiff(started) + '</li>'
                 + '<li><b>Latency</b>: ' + latency + '</li>'
-                + '</ul>'
             );
         }
 
