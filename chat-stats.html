@@ -4,6 +4,7 @@
     <title>Twitch Chat-Stats</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta charset="utf-8">
+    <meta name="author" content="EchtkPvL">
     <style>
         html, body {
             margin: 0;
@@ -136,6 +137,34 @@
         li.deleted { background: #e4ff00; color: #000; }
         li.banned { background: #ff0000; color: #000; }
         li.timeout { background: #ffa500; color: #000; }
+
+        input[type="button"] {
+            background-color: #008CBA;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #banned-users-box {
+            width: 325px;
+            z-index: 10;
+            position:absolute;
+            top: 50px;
+            left: -webkit-calc(50% - 162px);
+            background: #ed2323;
+            border-radius: 50px;
+            text-align: center;
+        }
+
+        #banned-users-box > textarea {
+            width: 275px;
+        }
     </style>
     <style id="style-first"></style>
     <style id="style-deleted"></style>
@@ -195,7 +224,15 @@
                         </li>
                     </ul>
                     <ul id="stats4"></ul>
+                    <input type="button" id="banned-users-open" value="Banned Users">
                 </div>
+            </div>
+
+            <div id="banned-users-box" style="display: none;">
+                <h2>Banned Users</h2>
+                <input type="button" id="banned-users-close" value="close"><br><br>
+                <textarea id="banned-users"></textarea>
+                <br><br><br>
             </div>
         </div>
     </div>
@@ -217,10 +254,12 @@
         var started = new Date();
         var latency = '-1';
         var channel = "EchtkPvL";
+        var dev = false;
 
         // Parse channel parameter
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
+        if (urlParams.has('dev')) dev = true;
         if (urlParams.has('channel')) {
             channel = urlParams.get('channel');
         } else {
@@ -269,8 +308,9 @@
 
                 $("#chat").prepend(genLi('first', '<b>' + tags['username'] + '</b>: ' + htmlEntities(message)));
             } else {
-                //$("#chat").prepend(genLi('', '<b>' + tags['username'] + '</b>: ' + htmlEntities(message)));
+                if (dev) $("#chat").prepend(genLi('', '<b>' + tags['username'] + '</b>: ' + htmlEntities(message)));
             }
+            updateBannedUsers(tags['username']);
         });
 
         client.on("ban", (channel, username, reason, userstate) => {
@@ -290,9 +330,18 @@
 
         client.on("raw_message", (messageCloned, message) => {
             msg_irc++;
-            if (message.raw.includes("CLEARCHAT")) console.log(message);
-            //if (message.raw.includes("JOIN")) console.log(message);
+            if (message.raw.includes("CLEARCHAT") && dev) console.log(message);
+            if (message.raw.includes("JOIN") && dev) console.log(message);
             window.setTimeout(genStats, 250);
+        });
+
+        $('#banned-users-open').click(function() {
+            $('#banned-users-box').show();
+            updateBannedUsers();
+        });
+
+        $('#banned-users-close').click(function() {
+            $('#banned-users-box').hide();
         });
 
         $('#stats3-first-cb').change(function() {
@@ -314,6 +363,15 @@
             if(!this.checked) $('#style-timeout').html('#chat > li.timeout { display: none; }');
             if(this.checked) $('#style-timeout').html('#chat > li.timeout { display: inherit; }');  
         });
+
+        function updateBannedUsers(user = "") {
+            var box = document.getElementById("banned-users");
+
+            if (user) box.value += user + "\n";
+
+            box.style.height = "";
+            box.style.height = (box.scrollHeight + 5) + "px";
+        }
 
         function ping() {
             client.ping()
@@ -354,7 +412,7 @@
             $("#stats3-banned").text(banned + ' (' + genPerc(banned, unique_users.length) + '%)');
 
             $("#stats4").html(
-                + '<li><b>Pings</b>: ' + pings + '</li>'
+                '<li><b>Pings</b>: ' + pings + '</li>'
                 + '<li><b>Join MSG</b>: ' + irc_join + '</li>'
                 + '<li><b>Part MSG</b>: ' + irc_part + '</li>'
                 //+ '<li><b>Join/Part diff</b>: ' + (irc_join - irc_part) + '</li>'
