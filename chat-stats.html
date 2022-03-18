@@ -310,12 +310,12 @@
             } else {
                 if (dev) $("#chat").prepend(genLi('', '<b>' + tags['username'] + '</b>: ' + htmlEntities(message)));
             }
-            updateBannedUsers(tags['username']);
         });
 
         client.on("ban", (channel, username, reason, userstate) => {
             banned++;
             $("#chat").prepend(genLi('banned', '<b>' + username + '</b> banned'));
+            updateBannedUsers(username);
         });
 
         client.on("messagedeleted", (channel, username, deletedMessage, userstate) => {
